@@ -1,0 +1,12 @@
+.footer{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: $footer-height ;
+    min-height: $footer-height ;
+    max-height: $footer-height ;
+    padding: $padding-content;
+    align-items: center;
+    color: white;
+    border-bottom: 1px solid gray;
+}

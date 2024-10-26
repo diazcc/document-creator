@@ -1,0 +1,12 @@
+.header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: $header-height ;
+    min-height: $header-height ;
+    max-height: $header-height ;
+    padding: $padding-content;
+    align-items: center;
+    color: white;
+    border-bottom: 1px solid gray;
+}

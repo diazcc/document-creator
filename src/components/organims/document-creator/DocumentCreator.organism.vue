@@ -67,11 +67,11 @@
 <script setup lang="ts">
 import { reactive, ref, Ref } from 'vue';
 import Editor from '../../atoms/editor-text/EditorText.atom.vue';
-import ImgAtom from '../../atoms/img/Img.atom.vue';
-import SelectAtom from '../../atoms/select/Select.atom.vue';
 import DocumentCreatorPageMolecule from '../../molecules/document-creator-page/DocumentCreatorPage.molecule.vue';
 import { nextTick } from 'vue';
 import PopupMenuMolecule from '../../molecules/popup-menu/PopupMenu.molecule.vue';
+import SelectAtom from '../../atoms/select/Select.atom.vue';
+import ImgAtom from '../../atoms/img/Img.atom.vue';
 const currentPage = ref<number>(0);
 const currentEditor = ref<any>(null);
 const statePagesList: Ref<boolean> = ref(false);
