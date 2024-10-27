@@ -5,12 +5,26 @@
 
     dataDocumentCreator:{
         setDataPage:()=>{},
+        dataDraggableBox:[
+            {
+                name: 'Sofia',
+                email: 'sofia@example.com',
+                id: '',
+                type: 'img',
+            content: {
+                base64: 'image_base64_5'
+                 },
+                top: 500,
+                left: 550,
+                page: '5',
+            }
+        ]
     }
     and get value array content pages 
 
 -->
 <template>
-    <section class="document-creator">
+    <section class="document-creator" :ref="drop">
         <ul class="document-creator__header">
             <template v-for="action in arrayActions.actions">
                 <li v-if="action.type === 'divider'" class="document-creator__header__divider"></li>
@@ -27,16 +41,23 @@
         </ul>
         <div class="document-creator__body">
             <nav
-                :class="'document-creator__body__pages-list document-creator__body__pages-list--' + (statePagesList && 'active')">
+                :class="'document-creator__body__submenu document-creator__body__submenu--' + (statePagesList && 'active')">
+                <section class="document-creator__body__submenu__container">
+                    <ul class="document-creator__body__submenu__container__signs">
+                        <template v-for="(sign, index) in dataDocumentCreator.dataDraggableBox">
+                            <DraggableBoxAtom :email="sign.email" :name="sign.name" :top="sign.position.top"
+                                :left="sign.position.left" :index="index" />
+                        </template>
+                    </ul>
+                    <ul class="document-creator__body__submenu__container__pages-list">
+                        <li class="document-creator__body__submenu__container__pages-list__page"
+                            v-for="(page, index) in pages" @click="scrollToPage(index + 1)">
+                            {{ index + 1 }}
+                        </li>
 
-                <ul class="document-creator__body__pages-list__container">
-                    <li class="document-creator__body__pages-list__container__page" v-for="(page, index) in pages"
-                        @click="scrollToPage(index + 1)">
-                        {{ index + 1 }}
-                    </li>
-
-                </ul>
-                <a class="document-creator__body__pages-list__close" @click="validateOpenPagesLists">
+                    </ul>
+                </section>
+                <a class="document-creator__body__submenu__close" @click="validateOpenPagesLists">
                     <img src="/icon-list.svg">
                 </a>
             </nav>
@@ -65,13 +86,19 @@
     </section>
 </template>
 <script setup lang="ts">
-import { reactive, ref, Ref } from 'vue';
 import Editor from '../../atoms/editor-text/EditorText.atom.vue';
 import DocumentCreatorPageMolecule from '../../molecules/document-creator-page/DocumentCreatorPage.molecule.vue';
 import { nextTick } from 'vue';
 import PopupMenuMolecule from '../../molecules/popup-menu/PopupMenu.molecule.vue';
 import SelectAtom from '../../atoms/select/Select.atom.vue';
 import ImgAtom from '../../atoms/img/Img.atom.vue';
+
+import { useDrop, XYCoord } from 'vue3-dnd'
+
+import { onMounted, Reactive, reactive, Ref, ref, watch } from 'vue'
+import { ItemTypes } from '../../../interfaces/ItemTypes';
+import DraggableBoxAtom from '../../atoms/DraggableBox/DraggableBox.atom.vue';
+
 const currentPage = ref<number>(0);
 const currentEditor = ref<any>(null);
 const statePagesList: Ref<boolean> = ref(false);
@@ -455,7 +482,7 @@ function updateActions(editor: any): void {
         {
             type: 'divider',
         },
-        
+
         {
             type: 'file',
             getBase64: (event: any) => {
@@ -595,7 +622,7 @@ function updateActions(editor: any): void {
         {
             type: 'divider',
         },
-        
+
         {
             type: 'select',
             id: '',
@@ -638,6 +665,65 @@ function updateActions(editor: any): void {
 
 
 
+
+const [, drop] = useDrop(() => ({
+    accept: ItemTypes.BOX,
+    drop(item: any, monitor: any) {
+        const delta = monitor.getDifferenceFromInitialOffset() as XYCoord;
+        const newLeft = Math.round(item.left + delta.x);
+        const newTop = Math.round(item.top + delta.y);
+        const clientOffset = monitor.getClientOffset();
+        if (clientOffset) {
+            const element = document.elementFromPoint(clientOffset.x, clientOffset.y);
+            const elSig: any = document.querySelector(`[data-id="${item.email + item.index}"]`);
+            const elFather = element?.closest('.document-creator-page');
+            if (elFather) { // exist page?
+                const rectFather = elFather.getBoundingClientRect()
+                const totalTop = (rectFather.height - 85) - newTop; // THIS VALUE IS RECOMENDED
+                console.log(totalTop);
+                if (isOutOfBounds(elSig as HTMLElement, elFather as HTMLElement)) {
+                    console.log('SI');
+                    props.dataDocumentCreator.dataDraggableBox[item.index].position = {
+                        top: newTop,
+                        left: newLeft,
+                        index: item.index
+                    }
+                    /* dataPdfModifier.pages[0].texts[0].posX = newLeft; 
+                    dataPdfModifier.pages[0].texts[0].posY = totalTop;  */
+                }
+                if (valdiateSignOnPagePdf(elFather, elSig) == false) {
+                    setSignOnPdf(elFather, elSig)
+                }
+            } else {
+                console.log('No parent element found with class "page"');
+            }
+
+        }
+
+        return undefined;
+    },
+}));
+function isOutOfBounds(elSig: HTMLElement, elFather: HTMLElement): boolean {
+    const sigRect = elSig.getBoundingClientRect();
+    const fatherRect = elFather.getBoundingClientRect();
+    const isOutOfTop = sigRect.top < fatherRect.top;
+    const isOutOfBottom = sigRect.bottom > fatherRect.bottom;
+    const isOutOfLeft = sigRect.left < fatherRect.left;
+    const isOutOfRight = sigRect.right > fatherRect.right;
+
+    return isOutOfTop || isOutOfBottom || isOutOfLeft || isOutOfRight;
+}
+
+const valdiateSignOnPagePdf = (page: Element, sign: Element): boolean => page.contains(sign);
+const setSignOnPdf = (elPdf: Element, sign: Element) => elPdf.appendChild(sign);
+
+
+/* function loadLocalPdf() {
+  const localPdfUrl = new URL('../../../assets/files/tes.pdf', import.meta.url).href; 
+  dataPdfViewer.urlPdf = localPdfUrl;
+  dataPdfModifier.urlPdf = localPdfUrl;
+}
+ */
 
 </script>
 <style scoped src="./DocumentCreator.organism.scss"></style>
