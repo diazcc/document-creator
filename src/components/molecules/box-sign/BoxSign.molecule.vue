@@ -33,11 +33,11 @@
         }
  -->
 <template>
-    <section class="box-sign" :style="{
+    <section class="box-sign" ref="boxElement" :style="{
         top: dataBoxSign.position.y + 'px',
         left: dataBoxSign.position.x + 'px',
         transform: `translate(-50%, -50%) rotate(${dataBoxSign.rotation}deg)`,
-        zIndex: `${isDragging ? 9999 : 2}`,
+        zIndex: `${isDragging ? 9999 : 3}`,
         /*  width: `${dataBoxSign.width}px`,
          maxWidth: `${dataBoxSign.width}px`, */
     }">
@@ -98,7 +98,7 @@ const canvas: any = ref(null); // Referencia al canvas de dibujo
 const lastX = ref(0); // Última posición X del dibujo en el canvas
 const lastY = ref(0); // Última posición Y del dibujo en el canvas
 const rotationHandle: any = ref(null); // Referencia al controlador de rotación
-const draggable = ref(null); // Referencia a la caja arrastrable
+const boxElement  :any= ref(null); // Referencia a la caja arrastrable
 
 const isDrawingEnabled = ref(false); // Indica si el dibujo en el canvas está habilitado
 const isDrawing = ref(false); // Estado de dibujo activo o inactivo
@@ -138,37 +138,80 @@ onMounted(() => {
 
 //This function found for set position dinamically
 function setPositionSign(x: number | string, y: number | string): void {
-    props.dataBoxSign.x = x;
-    props.dataBoxSign.y = y;
+ props.dataBoxSign.position.y = y;
+ props.dataBoxSign.position.x = x;
 }
 
 function setStateDraw() {
     props.dataBoxSign.config.canDraw = !props.dataBoxSign.config.canDraw;
 }
 function handleDrop(event: any) {
-    const dropX = props.dataBoxSign.position.x / 2;
-    const dropY = props.dataBoxSign.position.y + props.dataBoxSign.height / 2;
+    event.preventDefault();
+
+    // Obtener las coordenadas del punto de soltar
+    const dropX = event.clientX;
+    const dropY = event.clientY;
+
+    // Buscar elementos en el punto de soltar
     const elementsAtPoint = document.elementsFromPoint(dropX, dropY);
+
+    // Encontrar el contenedor `.page` más cercano
     const droppedOnSquare = elementsAtPoint.find((el) => {
-        console.log(el.classList);
-        return el.classList.contains('home__wrapper__document__square')
-    }
-    );
+        const closestPage = el.closest('.page');
+        return closestPage !== null; // Devuelve true si encuentra algo
+    });
 
     if (droppedOnSquare) {
-        console.log('Elemento soltado sobre un .home__wrapper__document__square');
-        appendToDropTarget(droppedOnSquare);
-    } else {
-        console.log('Elemento no fue soltado sobre un .home__wrapper__document__square');
-        props.dataBoxSign.x = lastPosition.x;
-        props.dataBoxSign.y = lastPosition.y;
+        console.log('Elemento soltado sobre o cerca de un .page');
+        const closestPage = droppedOnSquare.closest('.page') as HTMLElement;
 
-    }
+        if (closestPage) {
+            // Obtener las dimensiones de `.page`
+            const pageRect = closestPage.getBoundingClientRect();
+
+            // Validar si el punto de soltar está dentro de las dimensiones de `.page`
+            const isWithinPage =
+                dropX >= pageRect.left &&
+                dropX <= pageRect.right &&
+                dropY >= pageRect.top &&
+                dropY <= pageRect.bottom;
+
+            if (isWithinPage) {
+                console.log('El punto de soltar está dentro de las dimensiones de .page');
+
+                // Validar si ya está contenido en `.page`
+                const isAlreadyInside = closestPage.contains(event.target as Node);
+
+                if (!isAlreadyInside) {
+                    appendToDropTarget(closestPage);
+                } else {
+                    console.log('El elemento ya está dentro de .page, no se realizará ningún cambio.');
+                }
+            } else {
+                console.log('El punto de soltar está fuera de las dimensiones de .page');
+                setPositionSign(0, 0); // Restaurar a posición predeterminada
+            }
+        }
+    } else {
+    console.log('Elemento no fue soltado sobre o cerca de un .page');
+
+    // Validar si ya está contenido en cualquier `.page`
+    const isContainedInAnyPage = Array.from(document.querySelectorAll('.page')).some((page: Element) => 
+        page.contains(event.target as Node)
+    );
+
+    setPositionSign(0, 0); // Restaurar a posición predeterminada si no está contenido en ninguna página
+    
 }
+}
+
+
+
+
 function appendToDropTarget(targetElement: any) {
     if (targetElement) {
-        targetElement.appendChild(draggable.value);
-        props.dataBoxSign.position = { x: 0, y: 0 };
+        targetElement.appendChild(boxElement.value);
+        props.dataBoxSign.position = { x: 100, y: 50 };
     }
 }
 function getValidationBox() {
@@ -193,8 +236,6 @@ function getValidationBox() {
                 end(event) {
                     isDragging.value = false;
                     handleDrop(event);
-                    lastPosition.x = props.dataBoxSign.position.x += event.dx;
-                    lastPosition.y = props.dataBoxSign.position.y += event.dy;
                 },
             },
         })

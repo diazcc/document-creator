@@ -4,7 +4,7 @@
     height: 100vh;
     justify-content: space-between;
     &__wrapper {
-        flex-grow: 1;
+        height: 100%;
         overflow: auto;
         justify-content: center;
         align-items: center;
@@ -12,6 +12,7 @@
         &__signs {
             background-color: rgb(109, 109, 109);
             width: 20rem;
+            min-width: 20rem;
             height: 100%;
             box-sizing: border-box;
         }
@@ -20,7 +21,7 @@
             flex-grow: 1;
             box-sizing: border-box;
             background-color: $gray;
-            padding: 1rem 13% 1rem 1rem;
+            padding: 1rem 8% 1rem 8%;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;

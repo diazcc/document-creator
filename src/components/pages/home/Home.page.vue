@@ -5,11 +5,12 @@
 import { onMounted, reactive, ref, Ref } from 'vue';
 import HomeTemplate from '../../templates/home/Home.template.vue';
 import { InputDataEx } from '../../../interfaces/InputDataEx.interface';
-import documentPdf  from '../../../assets/files/pdf.pdf';
+import documentPdf  from '../../../assets/files/prueba.pdf';
+
 const urlPdf: any = ref();
 const signs: Ref<any[]> = ref([]);
 
-const dataEntry: InputDataEx = reactive({
+let dataEntry: InputDataEx = reactive({
     posicionator: true,
     users: [
         {
@@ -47,9 +48,10 @@ const dataHome: any = reactive({
     }
 });
 
-onMounted(() => {
-    getInputDataExWeb(dataEntry);
+onMounted(async () => {
     getFile();
+    getData();
+    getInputDataExWeb(dataEntry);
 })
 
 function getInputDataExWeb(data: InputDataEx): void {
@@ -73,22 +75,26 @@ function getInputDataExWeb(data: InputDataEx): void {
         })
     });
 
-    console.log(dataHome.signs)
 }
 
+function getData(){
+  window.addEventListener('message', (event:any) => {
+    console.log('Mensaje recibido del iframe:', event.data);
+    if (event.data) {
+        dataEntry = reactive(event.data);
+    }
+});
+}
 
 function addNewSign(userSign: any) {
-    console.log('hola');
     dataHome.signs.push(userSign)
-    console.log(dataHome.signs);
 }
 
 async function getFile(){
   try {
-    const base64String = await getFileBase64(documentPdf);
-    console.log("Base64 Data:", base64String);
+    const base64String = await getFileBase64('../../../assets/files/pdf.pdf');
+    dataHome.dataPdfViewer.urlPdf = documentPdf;
   } catch (error:any) {
-    console.error("Error:", error.message);
   }
 }
 async function getFileBase64(fileUrl: string): Promise<string> {
@@ -118,6 +124,23 @@ async function getFileBase64(fileUrl: string): Promise<string> {
     throw new Error(`Error processing file: ${error.message}`);
   }
 }
+
+function convertImportedFileToBase64(file: File | Blob | any): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result?.toString().split(",")[1];
+      if (base64Data) {
+        resolve(base64Data);
+      } else {
+        reject("Failed to convert file to Base64.");
+      }
+    };
+    reader.onerror = () => reject("Error reading the file.");
+    reader.readAsDataURL(file);
+  });
+}
+
 
 </script>
 <style scoped></style>
