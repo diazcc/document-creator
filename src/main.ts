@@ -5,6 +5,7 @@ import router from './router.ts';
 import './style.scss';
 import lang  from './locales/lang.js';
 import { createI18n } from 'vue-i18n';
+import VueKonva from 'vue-konva';
 const i18n = createI18n({
     legacy: false,
     messages: lang,
@@ -15,4 +16,5 @@ const i18n = createI18n({
 const app = createApp(App);
 app.use(i18n);
 app.use(router);
+app.use(VueKonva);
 app.mount('#app');
