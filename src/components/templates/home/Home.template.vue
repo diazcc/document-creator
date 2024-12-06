@@ -2,9 +2,6 @@
     <main class="home">
         <section class="home__wrapper">
             <section  class="home__wrapper__signs">
-                <button @click="props.dataHome.addNewSign">
-                    Agregar
-                </button>
                 <BoxSign  v-for="(boxSing,index) in dataHome.signs" :dataBoxSign="boxSing"/>
             </section>
             <ul class="home__wrapper__document ">
@@ -22,13 +19,12 @@
                 </li>
             </ul>
         </section>
+    <PdfViewerAtom :dataPdfViewer="dataHome.dataPdfViewer"/>
     </main>
 </template>
 <script setup lang="ts">
-import FooterOrganism from '../../organims/footer/Footer.organism.vue';
-import HeaderOrganism from '../../organims/header/Header.organism.vue'; 
-import DraggableBox from '../../molecules/draggable/DraggableBox.molecule.vue';
 import BoxSign from '../../molecules/box-sign/BoxSign.molecule.vue';
+import PdfViewerAtom from '../../atoms/pdf-viewer/PdfViewer.atom.vue';
 const props: any = defineProps(['dataHome'])
 
 

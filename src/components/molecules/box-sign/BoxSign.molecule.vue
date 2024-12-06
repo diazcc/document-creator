@@ -9,71 +9,67 @@
 
 
         const dataBoxSign: any = { //Define interface 
-            config: {
-                canSign: false,
-                canDraw: false,
-                canMove: false,
-                canRotate: false,
-                canDefineSign: false,
-                canDuplicate: false,
-                canDelete: false,
-                canResize: false,
+            config: { if not define on componente extern, must be added on componente page on structure dataBoxSign
+                canSign: false or null,
+                canDraw: false or null,
+                canMove: false or null,
+                canRotate: false or null,
+                canDefineSign: false or null,
+                canDuplicate: false or null,
+                canDelete: false or null,
+                canResize: false or null,
             },
-            data: {
-                width: 200,
-                height: 65,
-                userEmail: '@email',
-                imgUserSign: 'base:64 / url',
-                userName: 'base:64 / url',
-                imgDraw: 'base:64 / url',
-                rotation: 0,
-                position: {
-                    x: 0,
-                    y: 0
-                },
+            width: 200,
+            height: 65,
+            userEmail: '@email',
+            imgUserSign: 'base:64 / url',
+            userName: 'base:64 / url',
+            imgDraw: 'base:64 / url',
+            rotation: 0,
+            position: {
+                x: 0,
+                y: 0
             },
-            typeOfSign: 'name',
-            state: 'free'
         }
  -->
 <template>
     <section class="box-sign" :style="{
-        top: dataBoxSign.data.position.y + 'px',
-        left: dataBoxSign.data.position.x + 'px',
-        transform: `translate(-50%, -50%) rotate(${dataBoxSign.data.rotation}deg)`,
+        top: dataBoxSign.position.y + 'px',
+        left: dataBoxSign.position.x + 'px',
+        transform: `translate(-50%, -50%) rotate(${dataBoxSign.rotation}deg)`,
         zIndex: `${isDragging ? 9999 : 2}`,
-        /*  width: `${dataBoxSign.data.width}px`,
-         maxWidth: `${dataBoxSign.data.width}px`, */
+        /*  width: `${dataBoxSign.width}px`,
+         maxWidth: `${dataBoxSign.width}px`, */
     }">
         <ul class="box-sign__asignator" :style="{
             opacity: `${isDragging ? 0 : 1}`,
             transition: `${isDragging ? 'all ease-out 0.2s' : 'none'}`
         }">
-            <li>
-                hola
+            <li class="box-sign__asignator__title">
+                {{ dataBoxSign.name }}
             </li>
         </ul>
         <ul class="box-sign__options" :style="{
             opacity: `${isDragging ? 0 : 1}`,
             transition: `${isDragging ? 'all ease-out 0.2s' : 'none'}`
         }">
-            <img src="/reload.svg" alt="">
-            <img src="/reload.svg" alt="">
-            <img src="/reload.svg" alt="">
-            <img src="/reload.svg" alt="" @click="setStateDraw">
+            <img class="box-sign__options__icon" src="/reload.svg" alt="">
+            <img class="box-sign__options__icon" src="/reload.svg" alt="">
+            <img class="box-sign__options__icon" src="/reload.svg" alt="">
+            <img :class="'box-sign__options__icon box-sign__options__icon--'+(dataBoxSign.config.canDraw ? 'active': '')" src="/reload.svg" alt="" @click="setStateDraw">
 
         </ul>
         <article class="box-sign__content" :style="{
-            width: `${dataBoxSign.data.width}px`,
-            height: `${dataBoxSign.data.height}px`,
+            width: `${dataBoxSign.width}px`,
+            height: `${dataBoxSign.height}px`,
         }" ref="elementSign">
 
-            <canvas ref="canvas" class="box-sign__content__canvas" :width="dataBoxSign.data.width"
-                :height="dataBoxSign.data.height" @mousedown="startDrawing" @mouseup="stopDrawing"
+            <canvas ref="canvas" :class="'box-sign__content__canvas box-sign__content__canvas--'+(props.dataBoxSign.config.canDraw ?  'active':'' )" :width="dataBoxSign.width"
+                :height="dataBoxSign.height" @mousedown="startDrawing" @mouseup="stopDrawing"
                 @mousemove="draw"></canvas>
 
 
-            <p>{{ props.dataBoxSign.canDraw ? 'Dibuja' : 'Haz clic' }}</p>
+            <p class="box-sign__content__text" v-if="!isDrawing">{{ props.dataBoxSign.config.canDraw ? 'Dibuja' : 'Haz clic' }}</p>
 
         </article>
         <article class="box-sign__buttons" :style="{
@@ -147,11 +143,11 @@ function setPositionSign(x: number | string, y: number | string): void {
 }
 
 function setStateDraw() {
-    props.dataBoxSign.canDraw = !props.dataBoxSign.canDraw;
+    props.dataBoxSign.config.canDraw = !props.dataBoxSign.config.canDraw;
 }
 function handleDrop(event: any) {
-    const dropX = props.dataBoxSign.data.position.x / 2;
-    const dropY = props.dataBoxSign.data.position.y + props.dataBoxSign.data.height / 2;
+    const dropX = props.dataBoxSign.position.x / 2;
+    const dropY = props.dataBoxSign.position.y + props.dataBoxSign.height / 2;
     const elementsAtPoint = document.elementsFromPoint(dropX, dropY);
     const droppedOnSquare = elementsAtPoint.find((el) => {
         console.log(el.classList);
@@ -172,7 +168,7 @@ function handleDrop(event: any) {
 function appendToDropTarget(targetElement: any) {
     if (targetElement) {
         targetElement.appendChild(draggable.value);
-        props.dataBoxSign.data.position = { x: 0, y: 0 };
+        props.dataBoxSign.position = { x: 0, y: 0 };
     }
 }
 function getValidationBox() {
@@ -180,21 +176,25 @@ function getValidationBox() {
         .draggable({
             listeners: {
                 move(event) {
-                    if (!props.dataBoxSign.canDraw) {
-                        const x = props.dataBoxSign.data.position.x += event.dx;
-                        const y = props.dataBoxSign.data.position.y += event.dy;
-                        setPositionSign(x, y)
-                        isDragging.value = true;
-                    } else { //For get last position
-                        lastPosition.x = props.dataBoxSign.data.position.x += event.dx;
-                        lastPosition.y = props.dataBoxSign.data.position.y += event.dy;
-                    }
+
+                        console.log(props.dataBoxSign.config.canDraw);
+                        
+                        if (!props.dataBoxSign.config.canDraw) {
+                            const x = props.dataBoxSign.position.x += event.dx;
+                            const y = props.dataBoxSign.position.y += event.dy;
+                            setPositionSign(x, y)
+                            isDragging.value = true;
+                        } else { //For get last position
+                            lastPosition.x = props.dataBoxSign.position.x + event.dx;
+                            lastPosition.y = props.dataBoxSign.position.y + event.dy;
+                        }
+                        
                 },
                 end(event) {
                     isDragging.value = false;
                     handleDrop(event);
-                    lastPosition.x = props.dataBoxSign.data.position.x += event.dx;
-                    lastPosition.y = props.dataBoxSign.data.position.y += event.dy;
+                    lastPosition.x = props.dataBoxSign.position.x += event.dx;
+                    lastPosition.y = props.dataBoxSign.position.y += event.dy;
                 },
             },
         })
@@ -202,8 +202,8 @@ function getValidationBox() {
             edges: { left: true, right: true, bottom: true, top: true },
             listeners: {
                 move(event) {
-                    props.dataBoxSign.data.width = event.rect.width;
-                    props.dataBoxSign.data.height = event.rect.height;
+                    props.dataBoxSign.width = event.rect.width;
+                    props.dataBoxSign.height = event.rect.height;
                 },
             },
             modifiers: [
@@ -225,14 +225,14 @@ function getValidationRotation() {
                     y: box.top + box.height / 2,
                 };
                 const angle = Math.atan2(event.clientY - center.y, event.clientX - center.x);
-                props.dataBoxSign.data.rotation = angle * (180 / Math.PI);
+                props.dataBoxSign.rotation = angle * (180 / Math.PI);
             },
         },
     });
 }
 
 const draw = (event: any) => {
-    if (!isDrawing.value || !props.dataBoxSign.canDraw) return;
+    if (!isDrawing.value || !props.dataBoxSign.config.canDraw) return;
 
     const ctx = canvas.value.getContext('2d');
     const rect = canvas.value.getBoundingClientRect();
@@ -251,7 +251,7 @@ const draw = (event: any) => {
 };
 
 const startDrawing = (event: any) => {
-    if (props.dataBoxSign.canDraw) {
+    if (props.dataBoxSign.config.canDraw) {
         isDrawing.value = true;
         const rect = canvas.value.getBoundingClientRect();
         lastX.value = event.clientX - rect.left;
